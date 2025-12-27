@@ -1,0 +1,309 @@
+:root {
+  --bg-primary: #1e1f22;
+  --bg-secondary: #2b2d30;
+  --bg-tertiary: #3c3f41;
+  --bg-editor: #1e1f22;
+  --accent-primary: #3b82f6;
+  --accent-green: #4ade80;
+  --text-primary: #bcbec4;
+  --text-secondary: #6f737a;
+  --text-muted: #5e6166;
+  --border-color: #393b40;
+  --tab-active: #4e5254;
+  --output-bg: #1e1f22;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* ===== PyCharm Layout ===== */
+
+.pycharm-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+/* Header */
+.pycharm-header {
+  height: 40px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.web-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--accent-primary);
+  color: white;
+  border-radius: 3px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.run-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #2e7d32;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.run-button:hover:not(:disabled) {
+  background: #388e3c;
+}
+
+.run-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Main Content */
+.pycharm-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Editor Panel */
+.editor-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  overflow: hidden;
+}
+
+.panel-header {
+  height: 28px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.file-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-radius: 3px;
+}
+
+.file-tab.active {
+  background: var(--tab-active);
+  color: var(--text-primary);
+}
+
+.file-icon {
+  font-size: 14px;
+}
+
+.editor-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Output Panel - PyCharm Style */
+.output-panel {
+  height: 200px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  background: var(--output-bg);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.panel-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.panel-tab {
+  padding: 4px 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.panel-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-primary);
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.panel-action-btn {
+  padding: 4px 6px;
+  color: var(--text-secondary);
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.panel-action-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.output-content {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 16px;
+  background: var(--output-bg);
+}
+
+.output-text {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+}
+
+/* Footer / Status Bar */
+.pycharm-footer {
+  height: 22px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.footer-separator {
+  margin: 0 8px;
+  color: var(--border-color);
+}
+
+.footer-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Spin animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4a4d52;
+}
+
+/* Monaco editor customization */
+.monaco-editor {
+  padding-top: 8px !important;
+}
+
+.monaco-editor .margin {
+  background: var(--bg-editor) !important;
+}
