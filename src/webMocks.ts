@@ -337,17 +337,15 @@ const terminalAPI = {
             const match = trimmed.match(/python\s+["']?([^"'\s]+)["']?/);
             if (match) {
                 const filePath = match[1];
-                outputCallback?.(`\r\n🐍 Running ${filePath}...\r\n\r\n`);
 
                 const file = findFile(filePath) || findFile('/project/' + filePath);
                 if (file && file.content) {
                     const error = await runPython(file.content);
                     if (error) {
-                        outputCallback?.(error);
+                        outputCallback?.(error + '\n');
                     }
-                    outputCallback?.('\r\n$ ');
                 } else {
-                    outputCallback?.(`❌ File not found: ${filePath}\r\n\r\n$ `);
+                    outputCallback?.(`File not found: ${filePath}\n`);
                 }
             }
         } else if (trimmed.startsWith('pip install')) {
