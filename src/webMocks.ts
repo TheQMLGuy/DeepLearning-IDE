@@ -1,24 +1,22 @@
-// Web-based APIs with Pyodide integration for in-browser Python execution
-// This replaces Electron APIs for GitHub Pages deployment
-// Types are defined in vite-env.d.ts
+// Web-based APIs with Polyglot Python+R execution
+// Automatic variable sharing between Python and R
 
 // ============================================
-// PYODIDE - In-Browser Python Runtime
+// PYODIDE - Python Runtime
 // ============================================
 
 let pyodideInstance: any = null;
 let pyodideLoadingPromise: Promise<void> | null = null;
 let outputCallback: ((data: string) => void) | null = null;
 
+// Shared variable store
+const sharedVars: Record<string, any> = {};
+
 const loadPyodide = async (): Promise<void> => {
     if (pyodideInstance) return;
     if (pyodideLoadingPromise) return pyodideLoadingPromise;
 
     pyodideLoadingPromise = (async () => {
-        console.log('[Pyodide] Loading Python runtime...');
-        outputCallback?.('\r\n🔄 Loading Python environment...\r\n');
-
-        // Load Pyodide from CDN
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
         document.head.appendChild(script);
@@ -28,59 +26,267 @@ const loadPyodide = async (): Promise<void> => {
             script.onerror = () => reject(new Error('Failed to load Pyodide'));
         });
 
-        // Initialize Pyodide
         pyodideInstance = await (window as any).loadPyodide({
             indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/'
         });
 
-        // Setup stdout/stderr capture
         await pyodideInstance.runPythonAsync(`
 import sys
-from io import StringIO
+import json
 
 class OutputCapture:
-    def __init__(self):
-        self.buffer = StringIO()
-    
     def write(self, text):
-        self.buffer.write(text)
-        # Trigger JS callback for real-time output
         import js
         if hasattr(js, '_pythonOutput'):
             js._pythonOutput(text)
-    
     def flush(self):
         pass
-    
-    def getvalue(self):
-        return self.buffer.getvalue()
 
 sys.stdout = OutputCapture()
 sys.stderr = OutputCapture()
         `);
 
-        // Setup JS callback for Python output
         (window as any)._pythonOutput = (text: string) => {
             outputCallback?.(text);
         };
 
-        console.log('[Pyodide] Python runtime ready!');
-        outputCallback?.('✅ Python environment ready!\r\n\r\n$ ');
+        outputCallback?.('✓ Ready\n');
     })();
 
     return pyodideLoadingPromise;
 };
 
-const runPython = async (code: string): Promise<string> => {
-    await loadPyodide();
+// ============================================
+// WEBR - R Runtime  
+// ============================================
+
+let webrInstance: any = null;
+let webrLoadingPromise: Promise<void> | null = null;
+
+const loadWebR = async (): Promise<void> => {
+    if (webrInstance) return;
+    if (webrLoadingPromise) return webrLoadingPromise;
+
+    webrLoadingPromise = (async () => {
+        const { WebR } = await import('https://webr.r-wasm.org/latest/webr.mjs' as any);
+        webrInstance = new WebR();
+        await webrInstance.init();
+    })();
+
+    return webrLoadingPromise;
+};
+
+// ============================================
+// POLYGLOT ENGINE - Auto variable sharing
+// ============================================
+
+// Detect language per line
+const detectLineLanguage = (line: string): 'python' | 'r' | 'comment' | 'empty' => {
+    const trimmed = line.trim();
+    if (!trimmed) return 'empty';
+    if (trimmed.startsWith('#')) return 'comment';
+
+    // Strong R indicators
+    if (/<-/.test(line)) return 'r';
+    if (/^\s*library\s*\(/.test(line)) return 'r';
+    if (/^\s*c\s*\(/.test(line)) return 'r';
+    if (/\$\w+/.test(line)) return 'r';
+    if (/^\s*(cat|print)\s*\(.*\\n/.test(line)) return 'r'; // R's cat with \n
+
+    // Strong Python indicators  
+    if (/^\s*(import|from)\s+/.test(line)) return 'python';
+    if (/^\s*def\s+\w+\s*\(/.test(line)) return 'python';
+    if (/^\s*class\s+\w+/.test(line)) return 'python';
+    if (/print\s*\(f?["']/.test(line)) return 'python';
+    if (/\[.*for.*in.*\]/.test(line)) return 'python'; // list comprehension
+    if (/:\s*$/.test(line)) return 'python'; // ends with colon
+
+    return 'python'; // default
+};
+
+// Parse code and group into language blocks
+const parseIntoBlocks = (code: string): Array<{ lang: 'python' | 'r', code: string, startLine: number }> => {
+    const lines = code.split('\n');
+    const blocks: Array<{ lang: 'python' | 'r', code: string, startLine: number }> = [];
+
+    let currentLang: 'python' | 'r' | null = null;
+    let currentCode: string[] = [];
+    let startLine = 1;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim().toLowerCase();
+
+        // Check for explicit markers
+        if (trimmed === '#%% python' || trimmed === '# python') {
+            if (currentCode.length > 0 && currentLang) {
+                blocks.push({ lang: currentLang, code: currentCode.join('\n'), startLine });
+            }
+            currentLang = 'python';
+            currentCode = [];
+            startLine = i + 2;
+            continue;
+        }
+        if (trimmed === '#%% r' || trimmed === '# r') {
+            if (currentCode.length > 0 && currentLang) {
+                blocks.push({ lang: currentLang, code: currentCode.join('\n'), startLine });
+            }
+            currentLang = 'r';
+            currentCode = [];
+            startLine = i + 2;
+            continue;
+        }
+
+        // Auto-detect if no explicit marker
+        const lineLang = detectLineLanguage(line);
+        if (lineLang !== 'comment' && lineLang !== 'empty') {
+            if (currentLang === null) {
+                currentLang = lineLang;
+                startLine = i + 1;
+            } else if (lineLang !== currentLang) {
+                // Language switch detected
+                if (currentCode.length > 0) {
+                    blocks.push({ lang: currentLang, code: currentCode.join('\n'), startLine });
+                }
+                currentLang = lineLang;
+                currentCode = [];
+                startLine = i + 1;
+            }
+        }
+
+        currentCode.push(line);
+    }
+
+    // Add final block
+    if (currentCode.length > 0 && currentLang) {
+        const codeStr = currentCode.join('\n').trim();
+        if (codeStr) {
+            blocks.push({ lang: currentLang, code: codeStr, startLine });
+        }
+    }
+
+    return blocks;
+};
+
+// Extract variables from Python and inject into R
+const syncPythonToR = async (): Promise<void> => {
+    if (!pyodideInstance || !webrInstance) return;
 
     try {
-        // Run the code - output is streamed via _pythonOutput callback
-        await pyodideInstance.runPythonAsync(code);
-        return ''; // Output was already sent via real-time callback
-    } catch (error: any) {
-        return `❌ Error: ${error.message || error}`;
+        // Get all Python variables
+        const varsJson = await pyodideInstance.runPythonAsync(`
+import json
+_vars = {}
+for name, val in list(globals().items()):
+    if not name.startswith('_') and name not in ['sys', 'json', 'OutputCapture']:
+        try:
+            if isinstance(val, (int, float)):
+                _vars[name] = val
+            elif isinstance(val, (list, tuple)) and all(isinstance(x, (int, float)) for x in val):
+                _vars[name] = list(val)
+            elif isinstance(val, str):
+                _vars[name] = val
+        except:
+            pass
+json.dumps(_vars)
+        `);
+
+        if (varsJson && varsJson !== '{}') {
+            const vars = JSON.parse(varsJson);
+            for (const [name, value] of Object.entries(vars)) {
+                sharedVars[name] = value;
+                if (typeof value === 'number') {
+                    await webrInstance.evalR(`${name} <- ${value}`);
+                } else if (Array.isArray(value)) {
+                    await webrInstance.evalR(`${name} <- c(${value.join(', ')})`);
+                } else if (typeof value === 'string') {
+                    await webrInstance.evalR(`${name} <- "${value}"`);
+                }
+            }
+        }
+    } catch (e) {
+        // Silent fail
     }
+};
+
+// Run Python block
+const runPythonBlock = async (code: string): Promise<void> => {
+    await loadPyodide();
+    try {
+        await pyodideInstance.runPythonAsync(code);
+    } catch (error: any) {
+        outputCallback?.(`Error: ${error.message?.split('\n').pop() || error}\n`);
+    }
+};
+
+// Run R block - capture output properly
+const runRBlock = async (code: string): Promise<void> => {
+    await loadWebR();
+    await syncPythonToR();
+
+    try {
+        // Wrap code in capture.output to get all console output
+        const wrappedCode = `capture.output({ ${code} }, type = "output")`;
+        const result = await webrInstance.evalR(wrappedCode);
+
+        try {
+            const output = await result.toArray();
+            if (output && output.length > 0) {
+                // Filter out empty lines and join
+                const cleanOutput = output.filter((line: string) => line !== '').join('\n');
+                if (cleanOutput) {
+                    outputCallback?.(cleanOutput + '\n');
+                }
+            }
+        } catch {
+            // Try alternative: just get the result directly
+            const str = await result.toString();
+            if (str) outputCallback?.(str + '\n');
+        }
+    } catch (error: any) {
+        outputCallback?.(`R: ${error.message?.split('\n').slice(-2).join(' ') || error}\n`);
+    }
+};
+
+// Execute polyglot code
+const executePolyglot = async (code: string): Promise<void> => {
+    const blocks = parseIntoBlocks(code);
+
+    for (const block of blocks) {
+        if (block.lang === 'python') {
+            await runPythonBlock(block.code);
+        } else {
+            await runRBlock(block.code);
+        }
+    }
+};
+
+// Get language annotations for editor
+const getLanguageAnnotations = (code: string): Array<{ line: number, lang: 'py' | 'R' }> => {
+    const lines = code.split('\n');
+    const annotations: Array<{ line: number, lang: 'py' | 'R' }> = [];
+
+    let currentLang: 'py' | 'R' = 'py';
+
+    for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim().toLowerCase();
+
+        if (trimmed === '#%% python' || trimmed === '# python') {
+            currentLang = 'py';
+        } else if (trimmed === '#%% r' || trimmed === '# r') {
+            currentLang = 'R';
+        } else {
+            const lang = detectLineLanguage(lines[i]);
+            if (lang === 'r') currentLang = 'R';
+            else if (lang === 'python') currentLang = 'py';
+        }
+
+        if (lines[i].trim() && !lines[i].trim().startsWith('#')) {
+            annotations.push({ line: i + 1, lang: currentLang });
+        }
+    }
+
+    return annotations;
 };
 
 // ============================================
@@ -92,225 +298,68 @@ interface VirtualFile {
     content?: string;
     isDirectory: boolean;
     path: string;
-    children?: VirtualFile[];
 }
 
-// Sample files for demo
+const STORAGE_KEY = 'ai-ide-files';
+let virtualFiles: VirtualFile[] = [];
+
 const defaultFiles: VirtualFile[] = [
     {
-        name: 'main.py',
+        name: 'script.py',
         isDirectory: false,
-        path: '/project/main.py',
-        content: `# Welcome to AI IDE! 🚀
-# This is a web-based Python IDE with in-browser execution
+        path: '/project/script.py',
+        content: `# Mixed Python + R Code
+# Variables are automatically shared!
 
-print("Hello, World!")
-print("=" * 40)
-
-# Let's try some Python
+#%% python  
 numbers = [1, 2, 3, 4, 5]
 squared = [x ** 2 for x in numbers]
 print(f"Numbers: {numbers}")
 print(f"Squared: {squared}")
 
-# Calculate sum
+#%% r
+cat("Mean:", mean(squared), "\\n")
+cat("SD:", sd(squared), "\\n")
+
+#%% python
 total = sum(squared)
-print(f"Sum of squares: {total}")
-`
-    },
-    {
-        name: 'data_analysis.py',
-        isDirectory: false,
-        path: '/project/data_analysis.py',
-        content: `# Data Analysis Example
-# Note: NumPy and Pandas work in Pyodide!
-
-print("📊 Data Analysis Demo")
-print("=" * 40)
-
-# Basic statistics without numpy
-data = [23, 45, 67, 89, 12, 34, 56, 78, 90, 21]
-print(f"Data: {data}")
-print(f"Min: {min(data)}")
-print(f"Max: {max(data)}")
-print(f"Mean: {sum(data) / len(data):.2f}")
-
-# Sorting
-sorted_data = sorted(data)
-print(f"Sorted: {sorted_data}")
-
-# Find median
-n = len(sorted_data)
-median = sorted_data[n // 2] if n % 2 else (sorted_data[n // 2 - 1] + sorted_data[n // 2]) / 2
-print(f"Median: {median}")
-`
-    },
-    {
-        name: 'algorithms.py',
-        isDirectory: false,
-        path: '/project/algorithms.py',
-        content: `# Algorithm Examples
-print("🔢 Algorithm Demos")
-print("=" * 40)
-
-# Fibonacci sequence
-def fibonacci(n):
-    """Generate first n Fibonacci numbers"""
-    fib = [0, 1]
-    for i in range(2, n):
-        fib.append(fib[i-1] + fib[i-2])
-    return fib[:n]
-
-print(f"Fibonacci(10): {fibonacci(10)}")
-
-# Prime number checker
-def is_prime(n):
-    if n < 2:
-        return False
-    for i in range(2, int(n ** 0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
-primes = [x for x in range(2, 30) if is_prime(x)]
-print(f"Primes up to 30: {primes}")
-
-# Factorial
-def factorial(n):
-    return 1 if n <= 1 else n * factorial(n - 1)
-
-print(f"Factorial of 10: {factorial(10):,}")
-`
-    },
-    {
-        name: 'examples',
-        isDirectory: true,
-        path: '/project/examples',
-        children: [
-            {
-                name: 'hello.py',
-                isDirectory: false,
-                path: '/project/examples/hello.py',
-                content: `# Simple Hello World
-print("👋 Hello from the examples folder!")
-print("This is a simple demo file.")
-
-name = "AI IDE User"
-print(f"Welcome, {name}!")
-`
-            }
-        ]
-    },
-    {
-        name: 'README.md',
-        isDirectory: false,
-        path: '/project/README.md',
-        content: `# AI IDE - Web Edition
-
-A fully web-based Python IDE that runs entirely in your browser!
-
-## Features
-- 🐍 Real Python execution (via Pyodide)
-- 📝 Monaco code editor
-- 📁 Virtual file system
-- 🎨 Dark theme
-
-## Getting Started
-1. Click on a file to open it
-2. Edit the code in the editor
-3. Press the "Run" button to execute
-
-Enjoy coding! 🚀
+print(f"Total: {total}")
 `
     }
 ];
 
-// In-memory file storage with localStorage persistence
-const STORAGE_KEY = 'ai-ide-files';
-
-let virtualFiles: VirtualFile[] = [];
-
 const loadFilesFromStorage = (): VirtualFile[] => {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            return JSON.parse(stored);
-        }
-    } catch (e) {
-        console.log('[VFS] No stored files, using defaults');
-    }
+        if (stored) return JSON.parse(stored);
+    } catch (e) { }
     return [...defaultFiles];
 };
 
 const saveFilesToStorage = () => {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(virtualFiles));
-    } catch (e) {
-        console.warn('[VFS] Could not save to localStorage');
-    }
+    } catch (e) { }
 };
 
-// Initialize virtual files
 virtualFiles = loadFilesFromStorage();
 
 const findFile = (path: string): VirtualFile | undefined => {
-    const search = (files: VirtualFile[]): VirtualFile | undefined => {
-        for (const file of files) {
-            if (file.path === path) return file;
-            if (file.children) {
-                const found = search(file.children);
-                if (found) return found;
-            }
-        }
-        return undefined;
-    };
-    return search(virtualFiles);
+    return virtualFiles.find(f => f.path === path || f.path === '/project/' + path || f.name === path);
 };
 
 const virtualFileSystem = {
-    selectDirectory: async (): Promise<string> => {
-        return '/project';
-    },
-
-    readDir: async (path: string): Promise<{ name: string; isDirectory: boolean; path: string }[]> => {
-        if (path === '/project') {
-            return virtualFiles.map(f => ({
-                name: f.name,
-                isDirectory: f.isDirectory,
-                path: f.path
-            }));
-        }
-
-        const dir = findFile(path);
-        if (dir?.children) {
-            return dir.children.map(f => ({
-                name: f.name,
-                isDirectory: f.isDirectory,
-                path: f.path
-            }));
-        }
-
-        return [];
-    },
-
-    readFile: async (path: string): Promise<string> => {
-        const file = findFile(path);
-        return file?.content || `# File not found: ${path}`;
-    },
-
-    saveFile: async (path: string, content: string): Promise<{ success: boolean }> => {
-        const existingFile = findFile(path);
-        if (existingFile) {
-            existingFile.content = content;
+    selectDirectory: async (): Promise<string> => '/project',
+    readDir: async (path: string) => virtualFiles.filter(f => f.path.startsWith(path)).map(f => ({
+        name: f.name, isDirectory: f.isDirectory, path: f.path
+    })),
+    readFile: async (path: string): Promise<string> => findFile(path)?.content || '',
+    saveFile: async (path: string, content: string) => {
+        const existing = findFile(path);
+        if (existing) {
+            existing.content = content;
         } else {
-            // Create new file
-            const name = path.split('/').pop() || 'untitled.py';
-            virtualFiles.push({
-                name,
-                isDirectory: false,
-                path,
-                content
-            });
+            virtualFiles.push({ name: path.split('/').pop() || path, isDirectory: false, path: '/project/' + path, content });
         }
         saveFilesToStorage();
         return { success: true };
@@ -323,61 +372,24 @@ const virtualFileSystem = {
 
 const terminalAPI = {
     init: () => {
-        console.log('[Terminal] Initialized');
-        // Start loading Pyodide in background
         loadPyodide().catch(console.error);
     },
 
     send: async (data: string) => {
         const trimmed = data.trim();
 
-        // Handle different commands
         if (trimmed.startsWith('python ') || trimmed.includes('.py')) {
-            // Extract file path and run
             const match = trimmed.match(/python\s+["']?([^"'\s]+)["']?/);
             if (match) {
-                const filePath = match[1];
-
-                const file = findFile(filePath) || findFile('/project/' + filePath);
-                if (file && file.content) {
-                    const error = await runPython(file.content);
-                    if (error) {
-                        outputCallback?.(error + '\n');
-                    }
+                const file = findFile(match[1]);
+                if (file?.content) {
+                    await executePolyglot(file.content);
                 } else {
-                    outputCallback?.(`File not found: ${filePath}\n`);
+                    outputCallback?.(`File not found\n`);
                 }
             }
-        } else if (trimmed.startsWith('pip install')) {
-            // Mock pip install
-            const packages = trimmed.replace('pip install', '').replace('-q', '').trim();
-            outputCallback?.(`\r\n📦 Installing ${packages}...\r\n`);
-            await new Promise(r => setTimeout(r, 500));
-            outputCallback?.(`✅ Successfully installed ${packages}\r\n\r\n$ `);
-        } else if (trimmed === 'clear' || trimmed === 'cls') {
-            outputCallback?.('\x1b[2J\x1b[H$ ');
-        } else if (trimmed === 'help') {
-            outputCallback?.(`\r\n
-📚 AI IDE - Web Terminal Help
-================================
-Commands:
-  python <file>  - Run a Python file
-  pip install    - (mocked) Install packages
-  clear          - Clear the terminal
-  help           - Show this help
-
-Note: This runs Python in your browser using Pyodide!
-\r\n$ `);
         } else if (trimmed.length > 0) {
-            // Try to run as Python code directly
-            outputCallback?.('\r\n');
-            const result = await runPython(trimmed);
-            if (result) {
-                outputCallback?.(`${result}\r\n`);
-            }
-            outputCallback?.('$ ');
-        } else {
-            outputCallback?.('\r\n$ ');
+            await executePolyglot(trimmed);
         }
     },
 
@@ -388,60 +400,28 @@ Note: This runs Python in your browser using Pyodide!
 };
 
 // ============================================
-// APP CONTROL API
-// ============================================
-
-const appControlAPI = {
-    setMode: (mode: string) => {
-        console.log('[AppControl] Mode set to:', mode);
-    }
-};
-
-// ============================================
-// KAGGLE API (Mock for web)
+// OTHER APIS
 // ============================================
 
 const kaggleAPI = {
     search: async (query: string) => {
-        console.log('[Kaggle] Searching for:', query);
-
-        // Return mock results based on query
-        const mockDatasets = [
-            { id: 'heptapod/titanic', name: 'Titanic Dataset', size: '60KB' },
-            { id: 'uciml/iris', name: 'Iris Flower Dataset', size: '5KB' },
-            { id: 'zalando-research/fashionmnist', name: 'Fashion MNIST', size: '30MB' },
-            { id: 'crowdflower/twitter-airline-sentiment', name: 'Twitter Airline Sentiment', size: '3MB' },
-            { id: 'datasnaek/youtube-new', name: 'YouTube Trending Videos', size: '200MB' },
-        ];
-
-        const filtered = mockDatasets.filter(d =>
-            d.name.toLowerCase().includes(query.toLowerCase()) ||
-            d.id.toLowerCase().includes(query.toLowerCase())
-        );
-
-        return {
-            success: true,
-            data: filtered.length > 0 ? filtered : mockDatasets.slice(0, 3)
-        };
-    }
-};
-
-// ============================================
-// ANALYSIS API (Mock for web)
-// ============================================
-
-const analysisAPI = {
-    checkDeps: async (_path: string) => {
-        // In web mode, we don't need to check dependencies
-        // Pyodide handles this differently
-        return { missing: [] };
-    },
-
-    recommend: async (_path: string) => {
-        return {
-            success: true,
-            recommendation: 'For web-based analysis, try using the built-in Python libraries or micropip to install packages.'
-        };
+        try {
+            const res = await fetch('./datasets.json');
+            const data = await res.json();
+            const all = [
+                ...data.kaggle.map((d: any) => ({ ...d, source: 'kaggle' })),
+                ...data.tensorflow.map((d: any) => ({ ...d, source: 'tensorflow' })),
+                ...data.pytorch.map((d: any) => ({ ...d, source: 'pytorch' })),
+                ...data.huggingface.map((d: any) => ({ ...d, source: 'huggingface' }))
+            ];
+            return {
+                success: true, data: all.filter((d: any) =>
+                    d.name.toLowerCase().includes(query.toLowerCase()) || d.id.toLowerCase().includes(query.toLowerCase())
+                ).slice(0, 20)
+            };
+        } catch {
+            return { success: false, data: [] };
+        }
     }
 };
 
@@ -449,17 +429,15 @@ const analysisAPI = {
 // INITIALIZE
 // ============================================
 
-console.log('[Web Mode] Initializing web APIs...');
-
 window.fileSystem = virtualFileSystem;
 window.terminal = terminalAPI;
-window.appControl = appControlAPI;
+window.appControl = { setMode: () => { } };
 window.kaggle = kaggleAPI;
-window.analysis = analysisAPI;
-
-// Start loading Pyodide in background
+window.analysis = { checkDeps: async () => ({ missing: [] }), recommend: async () => ({ success: true, recommendation: '' }) };
 window.pyodideReady = loadPyodide();
 
-console.log('[Web Mode] Web APIs ready!');
+(window as any).runR = runRBlock;
+(window as any).loadWebR = loadWebR;
+(window as any).getLanguageAnnotations = getLanguageAnnotations;
 
 export { };

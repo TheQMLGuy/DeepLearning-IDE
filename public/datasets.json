@@ -1,0 +1,350 @@
+{
+    "kaggle": [
+        {
+            "id": "heptapod/titanic",
+            "name": "Titanic",
+            "category": "Classification",
+            "size": "60KB",
+            "rows": 891
+        },
+        {
+            "id": "uciml/iris",
+            "name": "Iris Flower",
+            "category": "Classification",
+            "size": "5KB",
+            "rows": 150
+        },
+        {
+            "id": "uciml/breast-cancer-wisconsin-data",
+            "name": "Breast Cancer",
+            "category": "Classification",
+            "size": "24KB",
+            "rows": 569
+        },
+        {
+            "id": "uciml/adult-census-income",
+            "name": "Adult Census Income",
+            "category": "Classification",
+            "size": "4MB",
+            "rows": 32561
+        },
+        {
+            "id": "datasnaek/youtube-new",
+            "name": "YouTube Trending",
+            "category": "Analysis",
+            "size": "200MB",
+            "rows": 40949
+        },
+        {
+            "id": "CooperUnion/anime-recommendations-database",
+            "name": "Anime Recommendations",
+            "category": "Recommender",
+            "size": "112MB",
+            "rows": 73516
+        },
+        {
+            "id": "stackoverflow/stack-overflow-tag-network",
+            "name": "StackOverflow Tags",
+            "category": "NLP",
+            "size": "45MB",
+            "rows": 180000
+        },
+        {
+            "id": "snap/amazon-fine-food-reviews",
+            "name": "Amazon Reviews",
+            "category": "NLP/Sentiment",
+            "size": "300MB",
+            "rows": 568454
+        },
+        {
+            "id": "uciml/pima-indians-diabetes-database",
+            "name": "Diabetes",
+            "category": "Classification",
+            "size": "24KB",
+            "rows": 768
+        },
+        {
+            "id": "mlg-ulb/creditcard",
+            "name": "Credit Card Fraud",
+            "category": "Anomaly Detection",
+            "size": "144MB",
+            "rows": 284807
+        },
+        {
+            "id": "zynicide/wine-reviews",
+            "name": "Wine Reviews",
+            "category": "NLP",
+            "size": "51MB",
+            "rows": 129971
+        },
+        {
+            "id": "rounakbanik/the-movies-dataset",
+            "name": "Movies Dataset",
+            "category": "Recommender",
+            "size": "920MB",
+            "rows": 45000
+        },
+        {
+            "id": "shivamb/netflix-shows",
+            "name": "Netflix Titles",
+            "category": "Analysis",
+            "size": "1MB",
+            "rows": 8807
+        },
+        {
+            "id": "jessicali9530/celeba-dataset",
+            "name": "CelebA Faces",
+            "category": "Computer Vision",
+            "size": "1.4GB",
+            "rows": 202599
+        },
+        {
+            "id": "crowdflower/twitter-airline-sentiment",
+            "name": "Twitter Sentiment",
+            "category": "NLP/Sentiment",
+            "size": "3MB",
+            "rows": 14640
+        }
+    ],
+    "tensorflow": [
+        {
+            "id": "mnist",
+            "name": "MNIST",
+            "category": "Computer Vision",
+            "size": "11MB",
+            "description": "Handwritten digits 28x28"
+        },
+        {
+            "id": "fashion_mnist",
+            "name": "Fashion MNIST",
+            "category": "Computer Vision",
+            "size": "30MB",
+            "description": "Clothing items 28x28"
+        },
+        {
+            "id": "cifar10",
+            "name": "CIFAR-10",
+            "category": "Computer Vision",
+            "size": "170MB",
+            "description": "10 classes, 32x32 color"
+        },
+        {
+            "id": "cifar100",
+            "name": "CIFAR-100",
+            "category": "Computer Vision",
+            "size": "170MB",
+            "description": "100 classes, 32x32 color"
+        },
+        {
+            "id": "imdb_reviews",
+            "name": "IMDB Reviews",
+            "category": "NLP/Sentiment",
+            "size": "80MB",
+            "description": "Movie reviews sentiment"
+        },
+        {
+            "id": "cats_vs_dogs",
+            "name": "Cats vs Dogs",
+            "category": "Computer Vision",
+            "size": "786MB",
+            "description": "Binary classification"
+        },
+        {
+            "id": "celeb_a",
+            "name": "CelebA",
+            "category": "Computer Vision",
+            "size": "1.4GB",
+            "description": "Face attributes"
+        },
+        {
+            "id": "coco",
+            "name": "COCO 2017",
+            "category": "Object Detection",
+            "size": "25GB",
+            "description": "Object detection dataset"
+        },
+        {
+            "id": "imagenet2012",
+            "name": "ImageNet",
+            "category": "Computer Vision",
+            "size": "150GB",
+            "description": "1000 classes"
+        },
+        {
+            "id": "oxford_flowers102",
+            "name": "Flowers 102",
+            "category": "Computer Vision",
+            "size": "330MB",
+            "description": "102 flower categories"
+        },
+        {
+            "id": "speech_commands",
+            "name": "Speech Commands",
+            "category": "Audio",
+            "size": "2.3GB",
+            "description": "Audio keywords"
+        },
+        {
+            "id": "squad",
+            "name": "SQuAD",
+            "category": "NLP/QA",
+            "size": "35MB",
+            "description": "Question answering"
+        },
+        {
+            "id": "glue",
+            "name": "GLUE Benchmark",
+            "category": "NLP",
+            "size": "varies",
+            "description": "NLU benchmark"
+        }
+    ],
+    "pytorch": [
+        {
+            "id": "MNIST",
+            "name": "MNIST",
+            "category": "Computer Vision",
+            "size": "11MB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "FashionMNIST",
+            "name": "Fashion MNIST",
+            "category": "Computer Vision",
+            "size": "30MB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "CIFAR10",
+            "name": "CIFAR-10",
+            "category": "Computer Vision",
+            "size": "170MB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "CIFAR100",
+            "name": "CIFAR-100",
+            "category": "Computer Vision",
+            "size": "170MB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "ImageNet",
+            "name": "ImageNet",
+            "category": "Computer Vision",
+            "size": "150GB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "COCO",
+            "name": "COCO Detection",
+            "category": "Object Detection",
+            "size": "25GB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "VOCDetection",
+            "name": "Pascal VOC",
+            "category": "Object Detection",
+            "size": "2GB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "Cityscapes",
+            "name": "Cityscapes",
+            "category": "Segmentation",
+            "size": "11GB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "SVHN",
+            "name": "SVHN",
+            "category": "Computer Vision",
+            "size": "400MB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "STL10",
+            "name": "STL-10",
+            "category": "Computer Vision",
+            "size": "2.6GB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "EMNIST",
+            "name": "EMNIST",
+            "category": "Computer Vision",
+            "size": "535MB",
+            "module": "torchvision.datasets"
+        },
+        {
+            "id": "Kuzushiji-MNIST",
+            "name": "Kuzushiji MNIST",
+            "category": "Computer Vision",
+            "size": "18MB",
+            "module": "torchvision.datasets"
+        }
+    ],
+    "huggingface": [
+        {
+            "id": "imdb",
+            "name": "IMDB",
+            "category": "Sentiment",
+            "size": "80MB"
+        },
+        {
+            "id": "squad",
+            "name": "SQuAD",
+            "category": "Question Answering",
+            "size": "35MB"
+        },
+        {
+            "id": "glue",
+            "name": "GLUE",
+            "category": "NLU Benchmark",
+            "size": "varies"
+        },
+        {
+            "id": "wmt16",
+            "name": "WMT16 Translation",
+            "category": "Translation",
+            "size": "1.6GB"
+        },
+        {
+            "id": "common_voice",
+            "name": "Common Voice",
+            "category": "Speech",
+            "size": "40GB"
+        },
+        {
+            "id": "wikipedia",
+            "name": "Wikipedia",
+            "category": "Text",
+            "size": "20GB"
+        },
+        {
+            "id": "openwebtext",
+            "name": "OpenWebText",
+            "category": "Text",
+            "size": "12GB"
+        },
+        {
+            "id": "ag_news",
+            "name": "AG News",
+            "category": "Classification",
+            "size": "30MB"
+        },
+        {
+            "id": "yelp_review_full",
+            "name": "Yelp Reviews",
+            "category": "Sentiment",
+            "size": "166MB"
+        },
+        {
+            "id": "conll2003",
+            "name": "CoNLL-2003",
+            "category": "NER",
+            "size": "1MB"
+        }
+    ]
+}
