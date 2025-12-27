@@ -1,0 +1,175 @@
+.notebook-cell {
+    margin-bottom: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    transition: all 0.15s;
+}
+
+.notebook-cell:hover {
+    border-color: var(--accent-primary);
+}
+
+.notebook-cell.active {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+.notebook-cell.running {
+    border-color: #37b24d;
+}
+
+/* Toolbar */
+.cell-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 5px 5px 0 0;
+}
+
+.cell-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cell-index {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.cell-lang {
+    font-size: 8px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.cell-lang.python {
+    background: #306998;
+    color: #ffd43b;
+}
+
+.cell-lang.r {
+    background: #276dc3;
+    color: white;
+}
+
+.cell-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.notebook-cell:hover .cell-actions,
+.notebook-cell.active .cell-actions {
+    opacity: 1;
+}
+
+.cell-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border: none;
+    background: none;
+}
+
+.cell-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.cell-btn.run {
+    color: #37b24d;
+}
+
+.cell-btn.run:hover {
+    background: #37b24d;
+    color: white;
+}
+
+.cell-btn.delete:hover {
+    background: #c92a2a;
+    color: white;
+}
+
+.cell-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Editor */
+.cell-editor {
+    min-height: 60px;
+}
+
+.cell-editor .monaco-editor {
+    border-radius: 0;
+}
+
+/* Output */
+.cell-output {
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow: auto;
+}
+
+.cell-output pre {
+    font-family: 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 0;
+    white-space: pre-wrap;
+    color: var(--text-primary);
+}
+
+/* Add cell hint */
+.add-cell-hint {
+    position: absolute;
+    left: 50%;
+    bottom: -12px;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.add-cell-hint button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-size: 10px;
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.add-cell-hint button:hover {
+    background: #1c7ed6;
+}
+
+/* Animation */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
