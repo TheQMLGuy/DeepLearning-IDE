@@ -43,7 +43,7 @@ export const NotebookCell = React.memo(({
 
     const handleEditorMount = (editor: any) => {
         editorRef.current = editor
-        
+
         // Auto-resize editor based on content
         const updateHeight = () => {
             const contentHeight = Math.min(600, Math.max(60, editor.getContentHeight()))
@@ -62,9 +62,9 @@ export const NotebookCell = React.memo(({
     // Auto-scroll into view when active
     useEffect(() => {
         if (isActive && cellRef.current) {
-            cellRef.current.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'nearest' 
+            cellRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
             })
         }
     }, [isActive])
@@ -120,9 +120,9 @@ export const NotebookCell = React.memo(({
 
                     <button
                         className="cell-btn"
-                        onClick={(e) => { 
+                        onClick={(e) => {
                             e.stopPropagation()
-                            onAddBelow(cell.id) 
+                            onAddBelow(cell.id)
                         }}
                         title="Add cell below (Alt+Enter)"
                         aria-label="Add cell below"
@@ -132,7 +132,7 @@ export const NotebookCell = React.memo(({
 
                     <button
                         className="cell-btn delete"
-                        onClick={(e) => { 
+                        onClick={(e) => {
                             e.stopPropagation()
                             if (confirm('Delete this cell?')) {
                                 onDelete(cell.id)
@@ -164,8 +164,8 @@ export const NotebookCell = React.memo(({
                         fontSize: 13,
                         fontFamily: "'JetBrains Mono', 'SF Mono', Consolas, monospace",
                         padding: { top: 8, bottom: 8 },
-                        scrollbar: { 
-                            vertical: 'auto', 
+                        scrollbar: {
+                            vertical: 'auto',
                             horizontal: 'auto',
                             verticalScrollbarSize: 8,
                             horizontalScrollbarSize: 8
@@ -177,7 +177,7 @@ export const NotebookCell = React.memo(({
                         suggestOnTriggerCharacters: true,
                         acceptSuggestionOnEnter: 'on',
                         tabCompletion: 'on',
-                        wordBasedSuggestions: true,
+                        wordBasedSuggestions: 'currentDocument',
                     }}
                 />
             </div>
@@ -209,7 +209,7 @@ export const NotebookCell = React.memo(({
             {/* Add cell hint on hover */}
             {isHovered && !cell.isRunning && (
                 <div className="add-cell-hint">
-                    <button 
+                    <button
                         onClick={(e) => {
                             e.stopPropagation()
                             onAddBelow(cell.id)

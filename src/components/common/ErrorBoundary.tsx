@@ -1,5 +1,5 @@
 // Error Boundary Component - Prevents full app crashes
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+import { Component, ErrorInfo, ReactNode } from 'react'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 
 interface Props {
@@ -68,22 +68,22 @@ class ErrorBoundary extends Component<Props, State> {
                     margin: '20px',
                     color: '#e0e0e0'
                 }}>
-                    <AlertCircle 
-                        size={48} 
-                        color="#ef4444" 
+                    <AlertCircle
+                        size={48}
+                        color="#ef4444"
                         style={{ marginBottom: '16px' }}
                     />
-                    
-                    <h2 style={{ 
-                        margin: '0 0 8px 0', 
+
+                    <h2 style={{
+                        margin: '0 0 8px 0',
                         color: '#ef4444',
                         fontSize: '24px'
                     }}>
                         Something went wrong
                     </h2>
-                    
-                    <p style={{ 
-                        margin: '0 0 24px 0', 
+
+                    <p style={{
+                        margin: '0 0 24px 0',
                         color: '#9ca3af',
                         fontSize: '14px'
                     }}>
@@ -130,8 +130,8 @@ class ErrorBoundary extends Component<Props, State> {
                             <summary style={{ cursor: 'pointer', marginBottom: '8px', color: '#f59e0b' }}>
                                 Error Details (Development Only)
                             </summary>
-                            <pre style={{ 
-                                margin: 0, 
+                            <pre style={{
+                                margin: 0,
                                 overflow: 'auto',
                                 color: '#e0e0e0'
                             }}>
@@ -185,9 +185,9 @@ export class CellErrorBoundary extends Component<Props, State> {
                     borderRadius: '8px',
                     margin: '8px 0'
                 }}>
-                    <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
                         gap: '8px',
                         color: '#ef4444',
                         marginBottom: '8px'
@@ -195,8 +195,8 @@ export class CellErrorBoundary extends Component<Props, State> {
                         <AlertCircle size={16} />
                         <strong>Cell Error</strong>
                     </div>
-                    <p style={{ 
-                        margin: '0 0 12px 0', 
+                    <p style={{
+                        margin: '0 0 12px 0',
                         fontSize: '13px',
                         color: '#9ca3af'
                     }}>

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Plus, Save, FolderOpen, ExternalLink, LogIn } from 'lucide-react'
+import { Plus, Save, ExternalLink, LogIn } from 'lucide-react'
 import NotebookCell, { CellData } from './NotebookCell'
 import './Notebook.css'
 
